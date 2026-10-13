@@ -1,0 +1,25 @@
+.tarjeta {
+  position: relative;
+  border-radius: 10px;
+  border: 2px solid greenyellow;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url("https://cdn-icons-png.flaticon.com/512/44/44091.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  h3 {
+    font-size: 100px;
+  }
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+.tarjeta-select {
+  background-image: url("https://i.pinimg.com/236x/50/92/79/50927931bf0001c308591c640e40bd05.jpg");
+}
