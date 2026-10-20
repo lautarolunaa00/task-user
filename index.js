@@ -13,9 +13,11 @@
 //Express
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { dbConnect } from "./src/config/database.js";
-import authRouter from "./src/routes/authRoutes.js";
-import taskRouter from "./src/routes/taskRoutes.js";
+import authRouter from "./src/routes/auth.routes.js";
+import taskRouter from "./src/routes/task.routes.js";
+import categoryRouter from "./src/routes/category.routes.js";
 
 const app = express();
 const port = 4500;
@@ -28,13 +30,16 @@ if (!process.env.JWT_SECRET) {
 
 //middleware -> función que está entre la req y la res
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static("public")); //configuramos la carpeta public para nuestras páginas web
 app.use(cors());
 
 await dbConnect();
 
 app.use("/api/auth", authRouter);
+app.use("/api/tasks", taskRouter);
 app.use("/api/task", taskRouter);
+app.use("/api/categories", categoryRouter);
 
 app.listen(port, () => {
   console.log(`Server online en puerto: ${port}`);

@@ -74,129 +74,307 @@ Al abrir esa dirección se carga la interfaz web ubicada en `public/`.
 
 ## API REST
 
-La ruta base de la API es `/api/task`.
+### Autenticación (`/api/auth`)
 
-### Registro e inicio de sesión
-
-La ruta base de autenticación es `/api/auth`. El registro guarda la contraseña
-hasheada con bcrypt; el login devuelve un token JWT válido por una hora.
-
-#### Registrar un usuario
-
+#### 1. Registro de usuario
 ```http
 POST /api/auth/register
 Content-Type: application/json
-```
 
+{
+  "username": "usuario1",
+  "email": "usuario1@test.com",
+  "password": "password123"
+}
+```
+- **Respuesta (201 Created):**
 ```json
 {
-  "username": "ana",
-  "email": "ana@example.com",
-  "password": "mi-clave-segura"
+  "ok": true,
+  "msg": "Usuario registrado correctamente"
+}
+```
+- **Error de validación (400 Bad Request):**
+```json
+{
+  "ok": false,
+  "errors": {
+    "email": {
+      "msg": "El email ya está registrado"
+    }
+  }
 }
 ```
 
-#### Iniciar sesión
-
+#### 2. Inicio de sesión (Login)
 ```http
 POST /api/auth/login
 Content-Type: application/json
-```
 
+{
+  "email": "usuario1@test.com",
+  "password": "password123"
+}
+```
+- **Respuesta (200 OK):** *(También setea automáticamente la cookie `token`)*
 ```json
 {
-  "email": "ana@example.com",
-  "password": "mi-clave-segura"
+  "msg": "Login exitoso",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+- **Error credenciales inválidas (401 Unauthorized):**
+```json
+{
+  "msg": "Credenciales incorrectas"
 }
 ```
 
-La respuesta exitosa incluye el token en el campo `token`. Las rutas de tareas
-siguen sin requerir autenticación, tal como indica la consigna.
+---
 
-### Obtener todas las tareas
-
-```http
-GET /api/task
-```
-
-Ejemplo:
-
-```bash
-curl http://localhost:4500/api/task
-```
-
-Respuesta aproximada:
-
+### Autenticación en rutas protegidas
+Las rutas de tareas (`/api/tasks`) y las operaciones para crear, actualizar o inactivar categorías requieren que el usuario esté autenticado. Se puede enviar el token de dos formas:
+1. **Cookie:** Se almacena de manera automática tras realizar el login.
+2. **Body:** Enviando el token dentro del cuerpo JSON en la petición:
 ```json
 {
-  "tasks": []
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+- **Error sin autenticación (401 Unauthorized):**
+```json
+{
+  "ok": false,
+  "message": "La autenticación es requerida. Por favor envia un token"
 }
 ```
 
-### Crear una tarea
+---
 
+### Categorías (`/api/categories`)
+Las rutas `POST`, `PUT` y `DELETE` requieren autenticación mediante cookie tras iniciar sesión o enviando `"token"` en el cuerpo de la petición. Las rutas `GET` son públicas.
+
+#### 1. Obtener todas las categorías
 ```http
-POST /api/task
+GET /api/categories
+```
+- **Respuesta (200 OK):**
+```json
+{
+  "categories": [
+    {
+      "_id": "67140f0c9b1b1a0012345678",
+      "nombre": "Trabajo",
+      "estado": true,
+      "usuario": {
+        "_id": "67140e0c9b1b1a0012345670",
+        "username": "ana",
+        "email": "ana@example.com"
+      },
+      "createdAt": "2026-10-19T14:00:00.000Z",
+      "updatedAt": "2026-10-19T14:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### 2. Obtener categoría por ID
+```http
+GET /api/categories/:id
+```
+- **Respuesta (200 OK):** `{ "category": { ... } }`
+- **Error (404 Not Found):** `{ "msg": "Categoría no encontrada" }`
+- **Error (400 Bad Request):** `{ "msg": "El ID proporcionado no es un ObjectId válido" }`
+
+#### 3. Crear categoría
+```http
+POST /api/categories
 Content-Type: application/json
+Authorization: Bearer <TOKEN> (opcional)
+
+{
+  "nombre": "Estudio",
+  "estado": true
+}
+```
+- **Respuesta (201 Created):**
+```json
+{
+  "msg": "Categoría creada exitosamente",
+  "category": {
+    "_id": "67140f0c9b1b1a0012345679",
+    "nombre": "Estudio",
+    "estado": true
+  }
+}
+```
+- **Error de validación (400 Bad Request):**
+```json
+{
+  "msg": "Errores de validación",
+  "errors": [
+    "El campo 'nombre' debe tener entre 3 y 50 caracteres"
+  ]
+}
+```
+- **Error nombre duplicado (400 Bad Request):**
+```json
+{
+  "msg": "Ya existe una categoría con ese nombre"
+}
 ```
 
-Ejemplo:
-
-```bash
-curl -X POST http://localhost:4500/api/task \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Estudiar Express","description":"Repasar rutas y controladores"}'
-```
-
-Los campos disponibles son:
-
-- `title`: título de la tarea. Es obligatorio.
-- `description`: descripción de la tarea. Es opcional.
-- `completed`: estado de la tarea. Por defecto es `false`.
-- `createdAt`: fecha de creación generada automáticamente.
-
-### Actualizar y eliminar tareas
-
-Las rutas ya están declaradas, pero todavía funcionan como respuestas de ejemplo y no modifican la base de datos:
-
+#### 4. Actualizar categoría
 ```http
-PUT /api/task/:id
-DELETE /api/task/:id
+PUT /api/categories/:id
+Content-Type: application/json
+
+{
+  "nombre": "Estudio Avanzado",
+  "estado": true
+}
 ```
+- **Respuesta (200 OK):** `{ "msg": "Categoría actualizada exitosamente", "category": { ... } }`
+- **Error (404 Not Found):** `{ "msg": "Categoría no encontrada" }`
+
+#### 5. Inactivar categoría (Soft delete)
+```http
+DELETE /api/categories/:id
+```
+- **Respuesta (200 OK):**
+```json
+{
+  "msg": "Categoría inactivada exitosamente",
+  "category": {
+    "_id": "67140f0c9b1b1a0012345679",
+    "nombre": "Estudio Avanzado",
+    "estado": false
+  }
+}
+```
+
+---
+
+### Tareas (`/api/tasks`)
+*Requiere autenticación (mediante cookie tras iniciar sesión o enviando `"token"` en el body).*
+
+#### 1. Obtener todas las tareas del usuario logueado
+```http
+GET /api/tasks
+```
+- **Respuesta (200 OK):**
+```json
+{
+  "tasks": [
+    {
+      "_id": "6714100c9b1b1a0012345680",
+      "titulo": "Preparar clase",
+      "descripcion": "Estudiar controladores y validaciones",
+      "fechaEntrega": "2026-10-25T00:00:00.000Z",
+      "completada": false,
+      "categoria": {
+        "_id": "67140f0c9b1b1a0012345679",
+        "nombre": "Estudio",
+        "estado": true
+      },
+      "usuario": {
+        "_id": "67140e0c9b1b1a0012345670",
+        "username": "ana",
+        "email": "ana@example.com"
+      }
+    }
+  ]
+}
+```
+
+#### 2. Obtener tarea por ID
+```http
+GET /api/tasks/:id
+```
+- **Respuesta (200 OK):** `{ "task": { ... } }`
+- **Error (404 Not Found):** `{ "msg": "Tarea no encontrada" }`
+
+#### 3. Crear tarea
+```http
+POST /api/tasks
+Content-Type: application/json
+
+{
+  "token": "<TOKEN_JWT>",
+  "titulo": "Aprender Express",
+  "descripcion": "Repasar middlewares y validaciones",
+  "fechaEntrega": "2026-10-30",
+  "completada": false,
+  "categoria": "67140f0c9b1b1a0012345679"
+}
+```
+- **Respuesta (201 Created):**
+```json
+{
+  "msg": "Tarea creada exitosamente",
+  "task": { ... }
+}
+```
+- **Error de categoría inexistente (404 Not Found):**
+```json
+{
+  "msg": "La categoría especificada no existe"
+}
+```
+- **Error de validación (400 Bad Request):**
+```json
+{
+  "msg": "Errores de validación",
+  "errors": [
+    "El campo 'titulo' es obligatorio y debe ser un texto"
+  ]
+}
+```
+
+#### 4. Actualizar tarea
+```http
+PUT /api/tasks/:id
+Content-Type: application/json
+
+{
+  "completada": true
+}
+```
+- **Respuesta (200 OK):** `{ "msg": "Tarea actualizada exitosamente", "task": { ... } }`
+
+#### 5. Eliminar tarea
+```http
+DELETE /api/tasks/:id
+```
+- **Respuesta (200 OK):** `{ "msg": "Tarea eliminada exitosamente" }`
+- **Error (404 Not Found):** `{ "msg": "Tarea no encontrada" }`
+
+---
 
 ## Estructura del proyecto
 
 ```text
 .
-├── config/
-│   └── database.js          # Conexión con MongoDB
-├── controllers/
-│   └── taskControllers.js   # Lógica de la API de tareas
-├── models/
-│   └── task.js              # Esquema Mongoose de una tarea
-├── public/
-│   ├── app.js               # Lógica del juego de memoria
-│   ├── index.html           # Interfaz principal
-│   └── styles.css           # Estilos de la interfaz
-├── routes/
-│   └── taskRoutes.js        # Rutas REST de tareas
-├── index.js                 # Punto de entrada del servidor
+├── src/
+│   ├── config/
+│   │   └── database.js               # Conexión con MongoDB
+│   ├── controllers/
+│   │   ├── auth.controller.js        # Lógica de registro y login
+│   │   ├── category.controller.js    # Lógica CRUD de categorías
+│   │   └── task.controller.js        # Lógica CRUD de tareas
+│   ├── middlewares/
+│   │   ├── auth.js                   # Middleware JWT verifyToken
+│   │   └── validators.js             # Validaciones de ID, categorías y tareas
+│   ├── models/
+│   │   ├── User.js                   # Modelo de Usuario
+│   │   ├── category.js               # Modelo de Categoría
+│   │   └── Task.js                   # Modelo de Tarea
+│   └── routes/
+│       ├── auth.routes.js            # Rutas de autenticación
+│       ├── category.routes.js        # Rutas de categorías
+│       └── task.routes.js            # Rutas de tareas
+├── public/                           # Frontend estático
+├── index.js                          # Punto de entrada del servidor
 ├── package.json
 └── pnpm-lock.yaml
 ```
-
-## Scripts disponibles
-
-Actualmente no hay scripts personalizados configurados en `package.json`. Para ejecutar el proyecto se utiliza:
-
-```bash
-node index.js
-```
-
-## Estado del proyecto
-
-El proyecto se encuentra en desarrollo. La consulta y creación de tareas están conectadas con MongoDB. La actualización y eliminación de tareas están definidas en el router, pero todavía requieren implementar su lógica en los controladores.
-
-## Autor
-
-Proyecto realizado como parte de la cursada de Desarrollo Web.

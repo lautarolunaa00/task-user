@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import User from "../models/user.js";
+import User from "../models/User.js";
+import { generateToken } from "../utils/jwt.js";
 
 const register = async (req, res) => {
   try {
@@ -49,11 +49,13 @@ const login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { userId: user._id.toString() },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" },
-    );
+    const token = generateToken(user._id.toString());
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
 
     return res.status(200).json({
       msg: "Login exitoso",
@@ -68,5 +70,4 @@ const login = async (req, res) => {
     });
   }
 };
-
 export { register, login };
