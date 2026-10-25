@@ -134,3 +134,72 @@ export const taskValidation = (isUpdate = false) => [
     }),
   handleValidationErrors,
 ];
+
+// Validar creación de Producto (POST)
+export const validarCrearProducto = [
+  check("nombre")
+    .notEmpty()
+    .withMessage("El nombre es obligatorio")
+    .isString()
+    .withMessage("El nombre debe ser un texto")
+    .trim(),
+  check("categoria")
+    .notEmpty()
+    .withMessage("La categoría es obligatoria")
+    .custom((value) => {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        throw new Error("La categoría debe ser un ObjectId válido");
+      }
+      return true;
+    }),
+  check("precio")
+    .optional()
+    .isNumeric()
+    .withMessage("El precio debe ser un número"),
+  check("descripcion")
+    .optional()
+    .isString()
+    .withMessage("La descripción debe ser un texto"),
+  check("disponible")
+    .optional()
+    .isBoolean()
+    .withMessage("El campo disponible debe ser booleano"),
+  handleValidationErrors,
+];
+
+// Validar actualización de Producto (PUT)
+export const validarActualizarProducto = [
+  check("nombre")
+    .optional()
+    .notEmpty()
+    .withMessage("El nombre no puede estar vacío")
+    .isString()
+    .withMessage("El nombre debe ser un texto")
+    .trim(),
+  check("categoria")
+    .optional()
+    .custom((value) => {
+      if (value && !mongoose.Types.ObjectId.isValid(value)) {
+        throw new Error("La categoría debe ser un ObjectId válido");
+      }
+      return true;
+    }),
+  check("precio")
+    .optional()
+    .isNumeric()
+    .withMessage("El precio debe ser un número"),
+  check("descripcion")
+    .optional()
+    .isString()
+    .withMessage("La descripción debe ser un texto"),
+  check("disponible")
+    .optional()
+    .isBoolean()
+    .withMessage("El campo disponible debe ser booleano"),
+  handleValidationErrors,
+];
+
+// Alias para compatibilidad
+export const validarId = validateId;
+export const validarCampos = handleValidationErrors;
+

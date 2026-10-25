@@ -18,6 +18,7 @@ import { dbConnect } from "./src/config/database.js";
 import authRouter from "./src/routes/auth.routes.js";
 import taskRouter from "./src/routes/task.routes.js";
 import categoryRouter from "./src/routes/category.routes.js";
+import productRouter from "./src/routes/product.routes.js";
 
 const app = express();
 const port = 4500;
@@ -40,6 +41,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/tasks", taskRouter);
 app.use("/api/task", taskRouter);
 app.use("/api/categories", categoryRouter);
+app.use("/api/products", productRouter);
+app.use("/api/productos", productRouter);
 
 app.listen(port, () => {
   console.log(`Server online en puerto: ${port}`);
