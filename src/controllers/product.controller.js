@@ -80,7 +80,9 @@ export const actualizarProducto = async (req, res) => {
       data.img = data.imagen;
     }
 
-    const producto = await Product.findByIdAndUpdate(id, data, { new: true })
+    const producto = await Product.findByIdAndUpdate(id, data, {
+      returnDocument: "after",
+    })
       .populate("categoria", "nombre")
       .populate("usuario", "username email");
 
@@ -112,7 +114,7 @@ export const borrarProducto = async (req, res) => {
     const productoBorrado = await Product.findByIdAndUpdate(
       id,
       { estado: false },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!productoBorrado) {
