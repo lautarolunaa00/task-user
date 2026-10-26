@@ -23,12 +23,6 @@ import productRouter from "./src/routes/product.routes.js";
 const app = express();
 const port = 4500;
 
-if (!process.env.JWT_SECRET) {
-  throw new Error(
-    "Definí JWT_SECRET en el archivo .env antes de iniciar el servidor",
-  );
-}
-
 //middleware -> función que está entre la req y la res
 app.use(express.json());
 app.use(cookieParser());
