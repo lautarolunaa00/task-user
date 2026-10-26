@@ -94,7 +94,7 @@ export const putTask = async (req, res) => {
         ...(completada !== undefined && { completada }),
         ...(categoria !== undefined && { categoria: categoria || null }),
       },
-      { new: true }
+      { returnDocument: "after" }
     )
       .populate("categoria", "nombre estado")
       .populate("usuario", "username email");

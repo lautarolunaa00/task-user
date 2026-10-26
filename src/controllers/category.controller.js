@@ -89,7 +89,7 @@ export const updateCategory = async (req, res) => {
     if (estado !== undefined) datos.estado = estado;
 
     const category = await Categoria.findByIdAndUpdate(id, datos, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 
@@ -113,7 +113,7 @@ export const deleteCategory = async (req, res) => {
     const category = await Categoria.findByIdAndUpdate(
       id,
       { estado: false },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!category) {
