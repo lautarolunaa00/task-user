@@ -1,20 +1,14 @@
 import dns from "node:dns";
 import mongoose from "mongoose";
 
+// Fix para redes que bloquean registros SRV de MongoDB Atlas
+dns.setServers(["1.1.1.1", "1.0.0.1"]);
+
 export const dbConnect = async () => {
-  const mongoUri = process.env.MONGO_URI;
-  const dnsServers = process.env.DNS_SERVERS?.split(",")
-    .map((server) => server.trim())
-    .filter(Boolean);
-
-  if (!mongoUri) {
-    throw new Error("Definí MONGO_URI en el archivo .env antes de iniciar el servidor");
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ Base de datos conectada");
+  } catch (error) {
+    console.log("Error de conexión", error);
   }
-
-  if (dnsServers?.length) {
-    dns.setServers(dnsServers);
-  }
-
-  await mongoose.connect(mongoUri);
-  console.log("Base de datos online");
 };

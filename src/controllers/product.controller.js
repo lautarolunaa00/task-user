@@ -1,138 +1,179 @@
 import Product from "../models/Product.js";
 
-// Traer solo los productos activos, con límite de 5 y el total
-export const obtenerProductos = async (req, res) => {
+// Obtener la lista de productos con paginación
+const getProducts = async (req, res) => {
+  const { limite = 5, desde = 0 } = req.query;
+
   try {
-    const [total, productos] = await Promise.all([
+    const [total, products] = await Promise.all([
       Product.countDocuments({ estado: true }),
       Product.find({ estado: true })
-        .populate("categoria", "nombre")
-        .populate("usuario", "username email")
-        .limit(5),
+        .limit(Number(limite))
+        .skip(Number(desde))
+        .populate("usuario", "username email role")
+        .populate("categoria", "nombre"),
     ]);
 
     return res.status(200).json({
       ok: true,
       total,
-      productos,
+      products,
     });
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      msg: error.message,
+      message: error.message,
+    });
+  }
+};
+
+// Obtener un producto por su id
+const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findById(id)
+      .populate("usuario", "username email role")
+      .populate("categoria", "nombre");
+
+    if (!product || !product.estado) {
+      return res.status(404).json({
+        ok: false,
+        message: "Producto no encontrado",
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      product,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: error.message,
     });
   }
 };
 
 // Crear un producto
-export const crearProducto = async (req, res) => {
+const createProduct = async (req, res) => {
   try {
-    const { precio, categoria, descripcion, img, imagen } = req.body;
+    const { precio, categoria, descripcion, img } = req.body;
     const nombre = req.body.nombre.toUpperCase();
 
-    // Verificar si ya existe un producto con el mismo nombre
-    const productoDB = await Product.findOne({ nombre });
+    // Validar si ya existe un producto con ese nombre
+    const productDB = await Product.findOne({ nombre });
 
-    if (productoDB) {
+    if (productDB) {
       return res.status(400).json({
         ok: false,
-        msg: `El producto ${nombre} ya existe`,
+        message: `El producto con el nombre ${productDB.nombre} ya existe`,
       });
     }
 
-    // Datos a guardar
     const data = {
       nombre,
-      categoria,
-      usuario: req.user._id,
-      precio: precio || 0,
-      descripcion: descripcion || "",
-      img: img || imagen || undefined,
+      categoria, // id de categoría
+      precio,
+      descripcion,
+      img,
+      usuario: req.user._id, // proveniente de authenticate
     };
 
-    const producto = new Product(data);
-    await producto.save();
+    const product = new Product(data);
+    await product.save();
 
     return res.status(201).json({
       ok: true,
-      msg: "Producto creado exitosamente",
-      producto,
+      message: `El producto ${data.nombre} se guardó con éxito!!`,
+      product,
     });
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      msg: error.message,
+      message: error.message,
     });
   }
 };
 
 // Actualizar un producto
-export const actualizarProducto = async (req, res) => {
+const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { estado, usuario, ...data } = req.body;
+    const { precio, categoria, descripcion, disponible } = req.body;
+    const usuario = req.user._id;
 
-    if (data.nombre) {
-      data.nombre = data.nombre.toUpperCase();
+    const data = {
+      precio,
+      categoria,
+      descripcion,
+      disponible,
+      usuario,
+    };
+
+    if (req.body.nombre) {
+      data.nombre = req.body.nombre.toUpperCase();
     }
 
-    if (data.imagen && !data.img) {
-      data.img = data.imagen;
-    }
+    const product = await Product.findByIdAndUpdate(id, data, { new: true })
+      .populate("usuario", "username email role")
+      .populate("categoria", "nombre");
 
-    const producto = await Product.findByIdAndUpdate(id, data, {
-      returnDocument: "after",
-    })
-      .populate("categoria", "nombre")
-      .populate("usuario", "username email");
-
-    if (!producto) {
+    if (!product) {
       return res.status(404).json({
         ok: false,
-        msg: "Producto no encontrado",
+        message: "Producto no encontrado",
       });
     }
 
     return res.status(200).json({
       ok: true,
-      msg: "Producto actualizado exitosamente",
-      producto,
+      message: "Producto actualizado!",
+      product,
     });
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      msg: error.message,
+      message: error.message,
     });
   }
 };
 
-// Borrar producto (Soft delete con estado en false)
-export const borrarProducto = async (req, res) => {
+// Borrar un producto (Soft delete)
+const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const productoBorrado = await Product.findByIdAndUpdate(
+    const product = await Product.findByIdAndUpdate(
       id,
       { estado: false },
-      { returnDocument: "after" },
+      { new: true },
     );
 
-    if (!productoBorrado) {
+    if (!product) {
       return res.status(404).json({
         ok: false,
-        msg: "Producto no encontrado",
+        message: "Producto no encontrado",
       });
     }
 
     return res.status(200).json({
       ok: true,
-      msg: "Producto borrado exitosamente",
-      producto: productoBorrado,
+      message: "Producto eliminado",
+      product,
     });
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      msg: error.message,
+      message: error.message,
     });
   }
+};
+
+export {
+  getProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
 };

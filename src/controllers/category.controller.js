@@ -1,15 +1,17 @@
 import Categoria from "../models/category.js";
 
-// Obtener todas las categorías activas,total y datos te usuario (GET)
+// Obtener todas las categorías activas, total y datos de usuario (GET)
 export const getCategories = async (req, res) => {
-  const categories = await Categoria.find({ estado: true }).populate(
-    "usuario",
-    "username email",
-  );
+  try {
+    const [categories, total] = await Promise.all([
+      Categoria.find({ estado: true }).populate("usuario", "username email"),
+      Categoria.countDocuments({ estado: true }),
+    ]);
 
-  const total = await Categoria.countDocuments({ estado: true });
-
-  return res.status(200).json({ categories, total });
+    return res.status(200).json({ categories, total });
+  } catch (error) {
+    return res.status(500).json({ ok: false, msg: error.message });
+  }
 };
 
 // Crear una categoría
@@ -105,26 +107,40 @@ export const updateCategory = async (req, res) => {
     return res.status(500).json({ msg: error.message });
   }
 };
+
 // Inactivar categoría
 export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const category = await Categoria.findByIdAndUpdate(
+    const existeCategoria = await Categoria.findById(id);
+
+    if (!existeCategoria) {
+      return res.status(404).json({
+        ok: false,
+        message: `El id ${id} no existe`,
+      });
+    }
+
+    if (!existeCategoria.estado) {
+      return res.status(400).json({
+        ok: false,
+        message: `La categoría ${existeCategoria.nombre} ya está inactiva`,
+      });
+    }
+
+    const categoriaBorrada = await Categoria.findByIdAndUpdate(
       id,
       { estado: false },
       { returnDocument: "after" },
     );
 
-    if (!category) {
-      return res.status(404).json({ msg: "Categoría no encontrada" });
-    }
-
     return res.status(200).json({
-      msg: "Categoría inactivada exitosamente",
-      category,
+      ok: true,
+      message: "Categoría eliminada",
+      categoriaBorrada,
     });
   } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    return res.status(500).json({ ok: false, msg: error.message });
   }
 };

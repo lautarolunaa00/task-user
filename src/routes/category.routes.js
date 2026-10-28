@@ -1,26 +1,53 @@
 import { Router } from "express";
+import { check } from "express-validator";
 import {
-  getCategories,
-  getCategoryById,
   addCategory,
-  updateCategory,
   deleteCategory,
+  getCategories,
+  updateCategory,
 } from "../controllers/category.controller.js";
 import { authenticate } from "../middlewares/auth.js";
-import { categoryValidation, validateId } from "../middlewares/validators.js";
+import {
+  validationErrors,
+  validarRolAdmin,
+  validarCategoriaPorId,
+} from "../middlewares/validators.js";
 
 const router = Router();
 
-router.get("/", getCategories); // traer las categorías
-router.get("/:id", validateId, getCategoryById);
-router.post("/", categoryValidation(), authenticate, addCategory); // crear categoría
+router.get("/", getCategories); //traer las categorías
+router.post(
+  "/",
+  [
+    authenticate,
+    validarRolAdmin,
+    check("nombre").notEmpty().withMessage("El nombre es obligatorio"),
+    validationErrors,
+  ],
+  addCategory,
+); //crear categoría
 router.put(
   "/:id",
-  authenticate,
-  validateId,
-  categoryValidation(true),
+  [
+    authenticate,
+    validarRolAdmin,
+    check("id").isMongoId().withMessage("El id debe ser válido"),
+    check("nombre").notEmpty().withMessage("El nombre es obligatorio"),
+    check("id").custom(validarCategoriaPorId),
+    validationErrors,
+  ],
   updateCategory,
-); // actualizar categoría
-router.delete("/:id", authenticate, validateId, deleteCategory); // inactivar categoría
+); //actualizar categoría
+router.delete(
+  "/:id",
+  [
+    authenticate,
+    validarRolAdmin,
+    check("id").isMongoId().withMessage("El id debe ser válido"),
+    check("id").custom(validarCategoriaPorId),
+    validationErrors,
+  ],
+  deleteCategory,
+); //Inactivar categoría
 
 export default router;

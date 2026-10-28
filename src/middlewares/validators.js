@@ -1,9 +1,9 @@
-import { validationResult, check, param } from "express-validator";
+import { validationResult, check } from "express-validator";
 import User from "../models/User.js";
-import mongoose from "mongoose";
+import Categoria from "../models/category.js";
+import Producto from "../models/Product.js";
 
-export const handleValidationErrors = (req, res, next) => {
-  //preguntar si no hay errores
+export const validationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
@@ -14,7 +14,7 @@ export const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-//validar Registro
+// Validar Registro
 export const registerValidation = () => [
   check("username")
     .notEmpty()
@@ -25,7 +25,6 @@ export const registerValidation = () => [
         throw new Error("El usuario ya existe");
       }
     }),
-  //validar email
   check("email")
     .isEmail()
     .withMessage("Ingresar un email válido")
@@ -34,172 +33,95 @@ export const registerValidation = () => [
       if (user) {
         throw new Error("El email ya está registrado");
       }
-    }),
+    })
+    .normalizeEmail(),
   check("password")
+    .notEmpty()
+    .withMessage("La contraseña es obligatoria")
     .isLength({ min: 6 })
     .withMessage("La contraseña debe tener como mínimo 6 caracteres"),
-  handleValidationErrors,
+  validationErrors,
 ];
 
-//Validar Login
+// Validar Login
 export const loginValidation = () => [
   check("email")
     .trim()
     .isEmail()
     .withMessage("Por favor, ingrese un email válido")
     .normalizeEmail(),
-  check("password").notEmpty().withMessage("La contraseña es requerida"),
-  handleValidationErrors,
-];
-
-// Validar parámetro :id
-export const validateId = [
-  param("id")
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
-    .withMessage("El ID proporcionado no es un ObjectId válido"),
-  handleValidationErrors,
-];
-
-// Validar Categoría
-export const categoryValidation = (isUpdate = false) => [
-  ...(isUpdate
-    ? [
-        check("nombre")
-          .optional()
-          .notEmpty()
-          .withMessage("El nombre no puede estar vacío")
-          .isString()
-          .withMessage("El nombre debe ser un texto")
-          .trim()
-          .isLength({ min: 3, max: 50 })
-          .withMessage("El nombre debe tener entre 3 y 50 caracteres"),
-      ]
-    : [
-        check("nombre")
-          .notEmpty()
-          .withMessage("El nombre es obligatorio")
-          .isString()
-          .withMessage("El nombre debe ser un texto")
-          .trim()
-          .isLength({ min: 3, max: 50 })
-          .withMessage("El nombre debe tener entre 3 y 50 caracteres"),
-      ]),
-  check("estado")
-    .optional()
-    .isBoolean()
-    .withMessage("El campo estado debe ser un valor booleano"),
-  handleValidationErrors,
-];
-
-// Validar Tarea
-export const taskValidation = (isUpdate = false) => [
-  ...(isUpdate
-    ? [
-        check("titulo")
-          .optional()
-          .notEmpty()
-          .withMessage("El título no puede estar vacío")
-          .isString()
-          .withMessage("El título debe ser un texto")
-          .trim(),
-      ]
-    : [
-        check("titulo")
-          .notEmpty()
-          .withMessage("El título es obligatorio")
-          .isString()
-          .withMessage("El título debe ser un texto")
-          .trim(),
-      ]),
-  check("descripcion")
-    .optional()
-    .isString()
-    .withMessage("La descripción debe ser un texto"),
-  check("fechaEntrega")
-    .optional({ checkFalsy: true })
-    .isISO8601()
-    .withMessage("La fecha de entrega debe tener un formato válido"),
-  check("completada")
-    .optional()
-    .isBoolean()
-    .withMessage("El campo completada debe ser un valor booleano"),
-  check("categoria")
-    .optional({ checkFalsy: true })
-    .custom((value) => {
-      if (!value) return true;
-      if (!mongoose.Types.ObjectId.isValid(value)) {
-        throw new Error("La categoría debe ser un ObjectId válido");
-      }
-      return true;
-    }),
-  handleValidationErrors,
-];
-
-// Validar creación de Producto (POST)
-export const validarCrearProducto = [
-  check("nombre")
+  check("password")
     .notEmpty()
-    .withMessage("El nombre es obligatorio")
-    .isString()
-    .withMessage("El nombre debe ser un texto")
-    .trim(),
-  check("categoria")
+    .withMessage("La contraseña es requerida"),
+  validationErrors,
+];
+
+export const validationPassword = () => [
+  check("password")
     .notEmpty()
-    .withMessage("La categoría es obligatoria")
-    .custom((value) => {
-      if (!mongoose.Types.ObjectId.isValid(value)) {
-        throw new Error("La categoría debe ser un ObjectId válido");
-      }
-      return true;
-    }),
-  check("precio")
-    .optional()
+    .withMessage("La contraseña es requerida")
+    .isLength({ min: 6 })
+    .withMessage("La contraseña debe tener como mínimo 6 caracteres"),
+  validationErrors,
+];
+
+// Validación de código email
+export const verifyEmailValidation = () => [
+  check("code")
+    .notEmpty()
+    .withMessage("El código de verificación es necesario")
+    .trim()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("El código debe tener 6 dígitos")
     .isNumeric()
-    .withMessage("El precio debe ser un número"),
-  check("descripcion")
-    .optional()
-    .isString()
-    .withMessage("La descripción debe ser un texto"),
-  check("disponible")
-    .optional()
-    .isBoolean()
-    .withMessage("El campo disponible debe ser booleano"),
-  handleValidationErrors,
-];
-
-// Validar actualización de Producto (PUT)
-export const validarActualizarProducto = [
-  check("nombre")
-    .optional()
+    .withMessage("El código debe ser un número"),
+  check("email")
     .notEmpty()
-    .withMessage("El nombre no puede estar vacío")
-    .isString()
-    .withMessage("El nombre debe ser un texto")
-    .trim(),
-  check("categoria")
-    .optional()
-    .custom((value) => {
-      if (value && !mongoose.Types.ObjectId.isValid(value)) {
-        throw new Error("La categoría debe ser un ObjectId válido");
+    .withMessage("El correo es requerido")
+    .trim()
+    .isEmail()
+    .withMessage("Ingrese un email válido")
+    .custom(async (value) => {
+      const user = await User.findOne({ email: value });
+      if (!user) {
+        throw new Error("El usuario no existe");
       }
-      return true;
-    }),
-  check("precio")
-    .optional()
-    .isNumeric()
-    .withMessage("El precio debe ser un número"),
-  check("descripcion")
-    .optional()
-    .isString()
-    .withMessage("La descripción debe ser un texto"),
-  check("disponible")
-    .optional()
-    .isBoolean()
-    .withMessage("El campo disponible debe ser booleano"),
-  handleValidationErrors,
+      if (user.emailVerifed || user.emailVerified) {
+        throw new Error("El email ya está verificado");
+      }
+    })
+    .normalizeEmail(),
+  validationErrors,
 ];
 
-// Alias para compatibilidad
-export const validarId = validateId;
-export const validarCampos = handleValidationErrors;
+// Validar rol de admin
+export const validarRolAdmin = (req, res, next) => {
+  const rol = req.user?.role;
 
+  if (rol !== "admin") {
+    return res.status(401).json({
+      ok: false,
+      message: "No tiene permisos para esta acción",
+    });
+  }
+
+  next();
+};
+
+// Validar categoría por su id
+export const validarCategoriaPorId = async (id) => {
+  const existeCategoria = await Categoria.findById(id);
+
+  if (!existeCategoria) {
+    throw new Error("No existe una categoría con ese id");
+  }
+};
+
+// Validar producto por su id
+export const validarProductoPorId = async (id) => {
+  const existeProducto = await Producto.findById(id);
+
+  if (!existeProducto) {
+    throw new Error("No existe un producto con ese id");
+  }
+};

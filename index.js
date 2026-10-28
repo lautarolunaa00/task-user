@@ -19,6 +19,7 @@ import authRouter from "./src/routes/auth.routes.js";
 import taskRouter from "./src/routes/task.routes.js";
 import categoryRouter from "./src/routes/category.routes.js";
 import productRouter from "./src/routes/product.routes.js";
+import cartRouter from "./src/routes/cart.routes.js";
 
 const app = express();
 const port = 4500;
@@ -37,6 +38,7 @@ app.use("/api/task", taskRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);
 app.use("/api/productos", productRouter);
+app.use("/api/cart", cartRouter);
 
 app.listen(port, () => {
   console.log(`Server online en puerto: ${port}`);
