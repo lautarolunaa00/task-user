@@ -30,11 +30,10 @@ export const authenticate = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    return res.status(500).json({
+    // Token inválido o expirado: no es un error del servidor
+    return res.status(401).json({
       ok: false,
       message: error.message,
     });
   }
 };
-
-export const autenticar = authenticate;

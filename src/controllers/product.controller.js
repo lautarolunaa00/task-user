@@ -115,7 +115,7 @@ const updateProduct = async (req, res) => {
       data.nombre = req.body.nombre.toUpperCase();
     }
 
-    const product = await Product.findByIdAndUpdate(id, data, { new: true })
+    const product = await Product.findByIdAndUpdate(id, data, { returnDocument: "after" })
       .populate("usuario", "username email role")
       .populate("categoria", "nombre");
 
@@ -147,7 +147,7 @@ const deleteProduct = async (req, res) => {
     const product = await Product.findByIdAndUpdate(
       id,
       { estado: false },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!product) {

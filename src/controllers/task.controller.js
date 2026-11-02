@@ -1,5 +1,5 @@
 import Task from "../models/Task.js";
-import Categoria from "../models/category.js";
+import Category from "../models/Category.js";
 
 // Obtener todas las tareas del usuario logueado
 export const getTasks = async (req, res) => {
@@ -9,9 +9,9 @@ export const getTasks = async (req, res) => {
       .populate("categoria", "nombre estado")
       .populate("usuario", "username email");
 
-    return res.status(200).json({ tasks });
+    return res.status(200).json({ ok: true, tasks });
   } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };
 
@@ -27,12 +27,12 @@ export const getTaskById = async (req, res) => {
       .populate("usuario", "username email");
 
     if (!task) {
-      return res.status(404).json({ msg: "Tarea no encontrada" });
+      return res.status(404).json({ ok: false, message: "Tarea no encontrada" });
     }
 
-    return res.status(200).json({ task });
+    return res.status(200).json({ ok: true, task });
   } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };
 
@@ -42,11 +42,14 @@ export const postTask = async (req, res) => {
     const userId = req.user._id || req.user.userId;
     const { titulo, descripcion, fechaEntrega, completada, categoria } = req.body;
 
-    // Si viene la categoría, verificar que exista en la BD
+    // Si viene la categoría, verificar que exista en la BD y esté activa
     if (categoria) {
-      const catExists = await Categoria.findById(categoria);
-      if (!catExists) {
-        return res.status(404).json({ msg: "La categoría especificada no existe" });
+      const catExists = await Category.findById(categoria);
+      if (!catExists || !catExists.estado) {
+        return res.status(404).json({
+          ok: false,
+          message: "La categoría especificada no existe o está inactiva",
+        });
       }
     }
 
@@ -62,11 +65,12 @@ export const postTask = async (req, res) => {
     await task.save();
 
     return res.status(201).json({
-      msg: "Tarea creada exitosamente",
+      ok: true,
+      message: "Tarea creada exitosamente",
       task,
     });
   } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };
 
@@ -77,11 +81,14 @@ export const putTask = async (req, res) => {
     const { id } = req.params;
     const { titulo, descripcion, fechaEntrega, completada, categoria } = req.body;
 
-    // Si se envía una categoría, verificar que exista
+    // Si se envía una categoría, verificar que exista y esté activa
     if (categoria) {
-      const catExists = await Categoria.findById(categoria);
-      if (!catExists) {
-        return res.status(404).json({ msg: "La categoría especificada no existe" });
+      const catExists = await Category.findById(categoria);
+      if (!catExists || !catExists.estado) {
+        return res.status(404).json({
+          ok: false,
+          message: "La categoría especificada no existe o está inactiva",
+        });
       }
     }
 
@@ -100,15 +107,16 @@ export const putTask = async (req, res) => {
       .populate("usuario", "username email");
 
     if (!task) {
-      return res.status(404).json({ msg: "Tarea no encontrada" });
+      return res.status(404).json({ ok: false, message: "Tarea no encontrada" });
     }
 
     return res.status(200).json({
-      msg: "Tarea actualizada exitosamente",
+      ok: true,
+      message: "Tarea actualizada exitosamente",
       task,
     });
   } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };
 
@@ -122,13 +130,14 @@ export const deleteTask = async (req, res) => {
     });
 
     if (!task) {
-      return res.status(404).json({ msg: "Tarea no encontrada" });
+      return res.status(404).json({ ok: false, message: "Tarea no encontrada" });
     }
 
     return res.status(200).json({
-      msg: "Tarea eliminada exitosamente",
+      ok: true,
+      message: "Tarea eliminada exitosamente",
     });
   } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };

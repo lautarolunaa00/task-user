@@ -1,4 +1,4 @@
-import Categoria from "../models/category.js";
+import Categoria from "../models/Category.js";
 
 // Obtener todas las categorías activas, total y datos de usuario (GET)
 export const getCategories = async (req, res) => {
@@ -8,9 +8,9 @@ export const getCategories = async (req, res) => {
       Categoria.countDocuments({ estado: true }),
     ]);
 
-    return res.status(200).json({ categories, total });
+    return res.status(200).json({ ok: true, categories, total });
   } catch (error) {
-    return res.status(500).json({ ok: false, msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };
 
@@ -24,7 +24,7 @@ export const addCategory = async (req, res) => {
     if (validarNombre) {
       return res
         .status(400)
-        .json({ ok: false, msg: "Ya existe una categoría con ese nombre" });
+        .json({ ok: false, message: "Ya existe una categoría con ese nombre" });
     }
 
     const usuario = req.user._id;
@@ -36,17 +36,17 @@ export const addCategory = async (req, res) => {
     await category.save();
     return res.status(201).json({
       ok: true,
-      msg: "Categoría creada exitosamente",
+      message: "Categoría creada exitosamente",
       category,
     });
   } catch (error) {
     return res
       .status(500)
-      .json({ ok: false, msg: "Error al crear la categoría" });
+      .json({ ok: false, message: "Error al crear la categoría" });
   }
 };
 
-export const createCategory = addCategory;
+
 
 // Obtener una categoría por ID
 export const getCategoryById = async (req, res) => {
@@ -57,12 +57,12 @@ export const getCategoryById = async (req, res) => {
     );
 
     if (!category) {
-      return res.status(404).json({ msg: "Categoría no encontrada" });
+      return res.status(404).json({ ok: false, message: "Categoría no encontrada" });
     }
 
-    return res.status(200).json({ category });
+    return res.status(200).json({ ok: true, category });
   } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };
 
@@ -81,7 +81,7 @@ export const updateCategory = async (req, res) => {
       if (existeCategoria) {
         return res.status(400).json({
           ok: false,
-          msg: "Ya existe otra categoría con ese nombre",
+          message: "Ya existe otra categoría con ese nombre",
         });
       }
     }
@@ -96,15 +96,16 @@ export const updateCategory = async (req, res) => {
     });
 
     if (!category) {
-      return res.status(404).json({ msg: "Categoría no encontrada" });
+      return res.status(404).json({ ok: false, message: "Categoría no encontrada" });
     }
 
     return res.status(200).json({
-      msg: "Categoría actualizada exitosamente",
+      ok: true,
+      message: "Categoría actualizada exitosamente",
       category,
     });
   } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };
 
@@ -141,6 +142,6 @@ export const deleteCategory = async (req, res) => {
       categoriaBorrada,
     });
   } catch (error) {
-    return res.status(500).json({ ok: false, msg: error.message });
+    return res.status(500).json({ ok: false, message: error.message });
   }
 };

@@ -1,58 +1,52 @@
-# Server Web | API
+# API REST Ecommerce
 
-API REST y sitio web estático desarrollados con Node.js, Express y MongoDB. Incluye autenticación JWT y gestión de tareas, categorías y productos.
+API REST en desarrollo para un proyecto de tipo ecommerce. Actualmente incluye la configuración inicial del servidor, la conexión a MongoDB y una base de rutas para usuarios.
+
+## Tecnologías
+
+- Node.js con módulos ES
+- Express 5
+- MongoDB mediante Mongoose
+- CORS
 
 ## Requisitos
 
-- Node.js y pnpm.
-- Una base de datos MongoDB local o en Atlas.
+- Node.js
+- pnpm
+- MongoDB ejecutándose localmente en `127.0.0.1:27017`
 
-## Configuración
+## Instalación y ejecución
 
-Instala las dependencias y crea `.env` en la raíz del proyecto:
+Instala las dependencias y ejecuta el servidor desde la raíz del proyecto:
 
 ```bash
 pnpm install
+node index.js
 ```
 
-```env
-MONGO_URI=mongodb://127.0.0.1:27017/api-rest
-JWT_SECRET=define-una-clave-segura
-JWT_EXPIRES=1h
-NODE_ENV=development
+El servidor escucha en el puerto `4500` y se conecta a la base de datos `api_web24`.
+
+## Rutas disponibles
+
+La base de rutas está montada en `/api/auth`:
+
+| Método | Ruta        | Descripción                                                                      |
+| ------ | ----------- | -------------------------------------------------------------------------------- |
+| `GET`  | `/api/auth` | Devuelve la lista de usuarios registrados.                                       |
+| `POST` | `/api/auth` | Crea un usuario a partir de `username`, `email` y `password` enviados como JSON. |
+
+Ejemplo de cuerpo para crear un usuario:
+
+```json
+{
+  "username": "usuario",
+  "email": "usuario@example.com",
+  "password": "password"
+}
 ```
 
-Para MongoDB Atlas, reemplaza `MONGO_URI` por el URI del clúster. Si Node muestra `querySrv ECONNREFUSED`, agrega:
+## Estado actual
 
-```env
-DNS_SERVERS=1.1.1.1,1.0.0.1
-```
+El modelo de usuario contempla nombre de usuario, correo, contraseña, rol y campos para una futura verificación del correo. El registro y la consulta básica de usuarios están implementados; el envío y la verificación del correo todavía no están desarrollados.
 
-No compartas ni subas `.env`. Las variables `EMAIL_*` pueden configurarse para SMTP, pero el proyecto todavía no envía correos.
-
-## Iniciar
-
-```bash
-pnpm dev
-```
-
-Para iniciar sin reinicio automático:
-
-```bash
-pnpm start
-```
-
-El servidor y el sitio quedan disponibles en <http://localhost:4500>.
-
-## API
-
-Las rutas de autenticación son públicas. Las de tareas requieren autenticación; las rutas de escritura de categorías y productos también.
-
-| Recurso       | Rutas                                                                                          |
-| ------------- | ---------------------------------------------------------------------------------------------- |
-| Autenticación | `POST /api/auth/register`, `POST /api/auth/login`                                              |
-| Tareas        | `GET`, `POST /api/tasks`; `GET`, `PUT`, `DELETE /api/tasks/:id`                                |
-| Categorías    | `GET /api/categories`, `GET /api/categories/:id`; `POST`, `PUT`, `DELETE /api/categories/:id`  |
-| Productos     | `GET /api/products`; `POST /api/products`, `PUT /api/products/:id`, `DELETE /api/products/:id` |
-
-El registro recibe `username`, `email` y `password` como JSON. El login recibe `email` y `password`; al iniciar sesión, la API devuelve un JWT y lo establece en una cookie.
+> La contraseña se guarda actualmente tal como se recibe. Este proyecto está en desarrollo y aún no debe utilizarse en producción.

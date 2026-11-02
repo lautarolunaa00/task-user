@@ -12,8 +12,8 @@ import {
   validationErrors,
   validarRolAdmin,
   validarProductoPorId,
+  validarCategoriaActiva,
 } from "../middlewares/validators.js";
-import mongoose from "mongoose";
 
 const router = Router();
 
@@ -24,7 +24,7 @@ router.get("/", getProducts);
 router.get(
   "/:id",
   [
-    param("id").isMongoId().withMessage("El id debe ser válido"),
+    param("id").isMongoId().withMessage("El id debe ser un ID válido"),
     param("id").custom(validarProductoPorId),
     validationErrors,
   ],
@@ -46,12 +46,9 @@ router.post(
     check("categoria")
       .notEmpty()
       .withMessage("La categoría es obligatoria")
-      .custom((value) => {
-        if (!mongoose.Types.ObjectId.isValid(value)) {
-          throw new Error("La categoría debe ser un ObjectId válido");
-        }
-        return true;
-      }),
+      .isMongoId()
+      .withMessage("La categoría debe ser un ID válido")
+      .custom(validarCategoriaActiva),
     check("precio")
       .optional()
       .isNumeric()
@@ -75,9 +72,8 @@ router.put(
   [
     authenticate,
     validarRolAdmin,
-    param("id").isMongoId().withMessage("El id debe ser válido"),
+    param("id").isMongoId().withMessage("El id debe ser un ID válido"),
     param("id").custom(validarProductoPorId),
-    validationErrors,
     check("nombre")
       .optional()
       .notEmpty()
@@ -87,12 +83,9 @@ router.put(
       .trim(),
     check("categoria")
       .optional()
-      .custom((value) => {
-        if (value && !mongoose.Types.ObjectId.isValid(value)) {
-          throw new Error("La categoría debe ser un ObjectId válido");
-        }
-        return true;
-      }),
+      .isMongoId()
+      .withMessage("La categoría debe ser un ID válido")
+      .custom(validarCategoriaActiva),
     check("precio")
       .optional()
       .isNumeric()
@@ -110,13 +103,13 @@ router.put(
   updateProduct,
 );
 
-// Borrar producto
+// Borrar producto (Soft delete)
 router.delete(
   "/:id",
   [
     authenticate,
     validarRolAdmin,
-    param("id").isMongoId().withMessage("El id debe ser válido"),
+    param("id").isMongoId().withMessage("El id debe ser un ID válido"),
     param("id").custom(validarProductoPorId),
     validationErrors,
   ],

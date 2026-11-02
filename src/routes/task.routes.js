@@ -8,27 +8,30 @@ import {
   deleteTask,
 } from "../controllers/task.controller.js";
 import { authenticate } from "../middlewares/auth.js";
-import { validationErrors } from "../middlewares/validators.js";
-import mongoose from "mongoose";
+import {
+  validationErrors,
+  validarCategoriaActiva,
+} from "../middlewares/validators.js";
 
 const router = Router();
 
 // Todas las rutas de tareas requieren usuario autenticado
 router.use(authenticate);
 
+// Obtener todas las tareas del usuario
 router.get("/", getTasks);
 
+// Obtener una tarea por ID
 router.get(
   "/:id",
   [
-    param("id")
-      .custom((value) => mongoose.Types.ObjectId.isValid(value))
-      .withMessage("El ID proporcionado no es un ObjectId válido"),
+    param("id").isMongoId().withMessage("El ID proporcionado no es válido"),
     validationErrors,
   ],
   getTaskById,
 );
 
+// Crear una tarea
 router.post(
   "/",
   [
@@ -52,24 +55,19 @@ router.post(
       .withMessage("El campo completada debe ser un valor booleano"),
     check("categoria")
       .optional({ checkFalsy: true })
-      .custom((value) => {
-        if (!value) return true;
-        if (!mongoose.Types.ObjectId.isValid(value)) {
-          throw new Error("La categoría debe ser un ObjectId válido");
-        }
-        return true;
-      }),
+      .isMongoId()
+      .withMessage("La categoría debe ser un ID válido")
+      .custom(validarCategoriaActiva),
     validationErrors,
   ],
   postTask,
 );
 
+// Actualizar una tarea
 router.put(
   "/:id",
   [
-    param("id")
-      .custom((value) => mongoose.Types.ObjectId.isValid(value))
-      .withMessage("El ID proporcionado no es un ObjectId válido"),
+    param("id").isMongoId().withMessage("El ID proporcionado no es válido"),
     check("titulo")
       .optional()
       .notEmpty()
@@ -91,24 +89,19 @@ router.put(
       .withMessage("El campo completada debe ser un valor booleano"),
     check("categoria")
       .optional({ checkFalsy: true })
-      .custom((value) => {
-        if (!value) return true;
-        if (!mongoose.Types.ObjectId.isValid(value)) {
-          throw new Error("La categoría debe ser un ObjectId válido");
-        }
-        return true;
-      }),
+      .isMongoId()
+      .withMessage("La categoría debe ser un ID válido")
+      .custom(validarCategoriaActiva),
     validationErrors,
   ],
   putTask,
 );
 
+// Eliminar una tarea
 router.delete(
   "/:id",
   [
-    param("id")
-      .custom((value) => mongoose.Types.ObjectId.isValid(value))
-      .withMessage("El ID proporcionado no es un ObjectId válido"),
+    param("id").isMongoId().withMessage("El ID proporcionado no es válido"),
     validationErrors,
   ],
   deleteTask,

@@ -1,8 +1,10 @@
+import mongoose from "mongoose";
 import { validationResult, check } from "express-validator";
 import User from "../models/User.js";
-import Categoria from "../models/category.js";
-import Producto from "../models/Product.js";
+import Category from "../models/Category.js";
+import Product from "../models/Product.js";
 
+// Middleware centralizado de errores de validación
 export const validationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -50,9 +52,7 @@ export const loginValidation = () => [
     .isEmail()
     .withMessage("Por favor, ingrese un email válido")
     .normalizeEmail(),
-  check("password")
-    .notEmpty()
-    .withMessage("La contraseña es requerida"),
+  check("password").notEmpty().withMessage("La contraseña es requerida"),
   validationErrors,
 ];
 
@@ -108,20 +108,46 @@ export const validarRolAdmin = (req, res, next) => {
   next();
 };
 
-// Validar categoría por su id
+// Validar que la categoría exista (activa o no)
 export const validarCategoriaPorId = async (id) => {
-  const existeCategoria = await Categoria.findById(id);
+  if (!id || !mongoose.isValidObjectId(id)) {
+    throw new Error("El id de la categoría no es válido");
+  }
+  const existeCategoria = await Category.findById(id);
 
   if (!existeCategoria) {
     throw new Error("No existe una categoría con ese id");
   }
 };
 
-// Validar producto por su id
+// Validar que la categoría exista y esté activa (para asignarla a productos/tareas)
+export const validarCategoriaActiva = async (id) => {
+  if (!id || !mongoose.isValidObjectId(id)) {
+    throw new Error("El id de la categoría no es válido");
+  }
+  const existeCategoria = await Category.findById(id);
+
+  if (!existeCategoria) {
+    throw new Error("No existe una categoría con ese id");
+  }
+
+  if (!existeCategoria.estado) {
+    throw new Error("La categoría está inactiva");
+  }
+};
+
+// Validar producto por su id (existencia y estado activo)
 export const validarProductoPorId = async (id) => {
-  const existeProducto = await Producto.findById(id);
+  if (!id || !mongoose.isValidObjectId(id)) {
+    throw new Error("El id del producto no es válido");
+  }
+  const existeProducto = await Product.findById(id);
 
   if (!existeProducto) {
     throw new Error("No existe un producto con ese id");
+  }
+
+  if (!existeProducto.estado) {
+    throw new Error("El producto está inactivo");
   }
 };

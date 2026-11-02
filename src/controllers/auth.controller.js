@@ -17,14 +17,14 @@ const register = async (req, res) => {
 
     return res.status(201).json({
       ok: true,
-      msg: "Usuario registrado correctamente",
+      message: "Usuario registrado correctamente",
     });
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
       ok: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
@@ -35,7 +35,8 @@ const login = async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        msg: "email y password son obligatorios",
+        ok: false,
+        message: "Email y password son obligatorios",
       });
     }
 
@@ -45,7 +46,8 @@ const login = async (req, res) => {
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({
-        msg: "Credenciales incorrectas",
+        ok: false,
+        message: "Credenciales incorrectas",
       });
     }
 
@@ -58,7 +60,8 @@ const login = async (req, res) => {
     });
 
     return res.status(200).json({
-      msg: "Login exitoso",
+      ok: true,
+      message: "Login exitoso",
       token,
     });
   } catch (error) {
@@ -66,7 +69,7 @@ const login = async (req, res) => {
 
     return res.status(500).json({
       ok: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
