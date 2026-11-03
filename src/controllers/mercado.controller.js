@@ -20,15 +20,13 @@ export const postPreference = async (_req, res) => {
           },
         ],
         back_urls: {
-          success:
-            "https://bd5d-2803-9800-9443-a98a-c9f0-a379-ed9a-e266.ngrok-free.app/api/mercado/success",
-          failure:
-            "https://bd5d-2803-9800-9443-a98a-c9f0-a379-ed9a-e266.ngrok-free.app/api/mercado/failure",
-          pending: "https://misitio.com/pendiente",
+          success: "https://api-rest-liap.onrender.com/api/mercado/success",
+          failure: "https://api-rest-liap.onrender.com/",
+          pending: "https://api-rest-liap.onrender.com/",
         },
         auto_return: "approved",
         notification_url:
-          "https://bd5d-2803-9800-9443-a98a-c9f0-a379-ed9a-e266.ngrok-free.app/api/mercado/webhook",
+          "https://guidance-heaving-eleven.ngrok-free.dev/api/mercado/webhook",
       },
     });
 
