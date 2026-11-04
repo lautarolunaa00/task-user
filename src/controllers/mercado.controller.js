@@ -20,8 +20,10 @@ export const postPreference = async (_req, res) => {
           },
         ],
         back_urls: {
-          success: "https://api-rest-liap.onrender.com/api/mercado/success",
-          failure: "https://api-rest-liap.onrender.com/",
+          success:
+            "https://guidance-heaving-eleven.ngrok-free.dev/api/mercado/success",
+          failure:
+            "https://guidance-heaving-eleven.ngrok-free.dev/api/mercado/failure",
           pending: "https://api-rest-liap.onrender.com/",
         },
         auto_return: "approved",
