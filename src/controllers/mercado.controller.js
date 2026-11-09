@@ -1,7 +1,6 @@
-import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
+﻿import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
 import PaymentMercado from "../models/PaymentData.js";
 import Cart from "../models/Cart.js";
-import Mercado from "../models/Mercado.js";
 
 export const cliente = new MercadoPagoConfig({
   accessToken: process.env.ACCESS_TOKEN,
@@ -64,7 +63,7 @@ export const postWebhook = async (req, res) => {
     if (topic !== "payment" || !paymentId) {
       return res.status(200).json({
         ok: true,
-        message: "Notificación ignorada",
+        message: "NotificaciÃ³n ignorada",
       });
     }
 
@@ -77,7 +76,7 @@ export const postWebhook = async (req, res) => {
     if (paymentData.status !== "approved") {
       return res.status(200).json({
         ok: true,
-        message: "El pago todavía no fue aprobado",
+        message: "El pago todavÃ­a no fue aprobado",
       });
     }
 
@@ -106,7 +105,7 @@ export const postWebhook = async (req, res) => {
 
     return res.status(200).json({
       ok: true,
-      message: "El pago fue aprobado con éxito!!",
+      message: "El pago fue aprobado con Ã©xito!!",
     });
 
     ///--------------------------------------------------
@@ -117,27 +116,4 @@ export const postWebhook = async (req, res) => {
       message: error.message,
     });
   }
-};
-export const getSuccess = async (req, res) => {
-  const { payment_id, status, external_reference, merchant_order_id } =
-    req.query;
-
-  console.log("Datos recibidos en entorno de éxito:", {
-    payment_id,
-    status,
-    external_reference,
-    merchant_order_id,
-  });
-
-  const mercado = new Mercado({
-    payment_id,
-    status,
-    external_reference,
-    merchant_order_id,
-  });
-  await mercado.save();
-
-  return res.send(
-    `<h1>¡Gracias por tu compra!</h1><p>Tu pago <strong>#${payment_id}</strong> fue procesado con éxito.</p><p>Referencia de pedido: <strong>${external_reference}</strong></p>`,
-  );
 };
