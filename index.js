@@ -7,7 +7,7 @@ import taskRouter from "./src/routes/task.routes.js";
 import categoryRouter from "./src/routes/category.routes.js";
 import productRouter from "./src/routes/product.routes.js";
 import cartRouter from "./src/routes/cart.routes.js";
-import mercadoRouter from "./src/routes/mercado.routes.js";
+import mercadoRoutes from "./src/routes/mercado.routes.js";
 
 const app = express();
 const port = 4500;
@@ -27,7 +27,10 @@ app.use("/api/tasks", taskRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);
 app.use("/api/cart", cartRouter);
-app.use("/api/mercado", mercadoRouter);
+
+//MercadoPago
+app.use("/api/mercado", mercadoRoutes);
+
 
 app.listen(port, () => {
   console.log(`Server online en puerto: ${port}`);
